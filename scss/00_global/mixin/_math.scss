@@ -1,0 +1,139 @@
+@use "sass:math";
+
+// --------------------------------
+// Math Utilities
+// 数値ベースのデザイン実装用ユーティリティ集
+// For converting design specs into responsive, scalable CSS values.
+// --------------------------------
+
+// --------------------------------
+// Percentage Mixin
+// 親コンテナを基準に、デザインサイズからパーセンテージ値を算出
+// Calculate percentage values based on design dimensions relative to the container.
+//
+// $number2 = 親コンテナの横幅
+// $number1 = デザイン上のサイズ
+//
+// $number2 = container width
+// $number1 = design size based on the mockup
+// --------------------------------
+@mixin percentage($prop, $number1, $number2) {
+  #{$prop}: math.percentage(math.div($number1, $number2));
+}
+
+// --------------------------------
+// VW Mixin
+// デザイン寸法をvwに変換し、最適化して出力
+// Convert design sizes into viewport units (vw) with rounding optimization.
+//
+// $number2 = デザインのアートボード幅
+// $number1 = デザイン上のターゲット要素の幅
+//
+// $number2 = artboard width from the design mockup
+// $number1 = target element size from the design
+// --------------------------------
+@mixin vw($prop, $number1, $number2) {
+  // 単位なしで計算 / Calculate without any units to ensure pure math operations
+  $value: math.div($number1, $number2) * 100;
+  // 小数点以下を切り捨てて1桁に制限 / Round down to 1 decimal place for cleaner output
+  $value-rounded: calc(math.floor($value * 10) / 10);
+  // 単位を再適用 / Reapply units after rounding for valid CSS values
+  #{$prop}: $value-rounded * 1vw;
+}
+
+// --------------------------------
+// Min Mixin
+// 指定デバイスアートボードサイズを基準にvwとpxを比較し、min()で出力
+// Calculate min(vw, px) based on design artboard breakpoints (sp/tb/pc).
+//
+// 使用方法：プロパティ名、デザイン上の要素サイズ、アートボードタイプ（sp/tb/pc）を指定
+// Usage: Pass property name, design element size, and artboard type (sp/tb/pc).
+//
+// @include min(font-size, 150, 'sp');
+//
+// エラー処理：無効なサイズ指定時にエラーメッセージを表示
+// Error handling: Throws an error if an invalid size keyword is provided.
+//
+// [Note]
+// - When an invalid keyword is passed (not 'sp', 'tb', or 'pc'), an error will be thrown.
+// - Default error message is in Japanese. Please replace it with your language if needed.
+// - Example in English: "Invalid size keyword. Please use 'sp', 'tb', or 'pc'."
+// --------------------------------
+$artboard-sp: 375;
+$artboard-tb: 768;
+$artboard-pc: 1920;
+
+@mixin min($prop, $number, $size) {
+
+  $artboard-size: null;
+
+  @if $size =='sp' {
+    $artboard-size: $artboard-sp;
+  }
+
+  @else if $size =='tb' {
+    $artboard-size: $artboard-tb;
+  }
+
+  @else if $size =='pc' {
+    $artboard-size: $artboard-pc;
+  }
+
+  @else {
+    @error "無効なサイズキーワードが渡されました。'sp'、'tb'、または 'pc' を使用してください。";
+  }
+
+  // vwの値を計算 / Calculate the vw value
+  // 小数第1位で切り捨て（12.345 → 12.3） / Round down to the first decimal place (e.g., 12.345 → 12.3)
+  $vw-value: math.div($number, $artboard-size) * 100;
+  $vw-rounded: calc(math.floor($vw-value * 10) / 10);
+
+  // min関数を適用してプロパティを指定 / Apply the min() function to set the property
+  #{$prop}: min(#{$vw-rounded}vw, #{$number}px);
+}
+
+// --------------------------------
+// Font Size Clamp Mixin
+// フォントサイズをブラウザ幅に応じて可変させる（クランプ対応）
+// Responsive font-size scaling with clamp() and fallback support.
+// --------------------------------
+
+@mixin clamp-fontsize($fs-min, $width-small, $width-large, $fs-max) {
+  $preferred-vw-base: math.div(($fs-max - $fs-min), ($width-large - $width-small));
+  $preferred-vw: (
+    $preferred-vw-base * 100) * 1vw;
+  $preferred-rem: (
+    $width-small * -1 * $preferred-vw-base + $fs-min) * 0.1rem;
+
+  font-size: clamp($fs-min * 0.1rem,
+      $preferred-rem + $preferred-vw,
+      $fs-max * 0.1rem
+  );
+
+@supports not (font-size: clamp($fs-min * 0.1rem, $preferred-rem + $preferred-vw, $fs-max * 0.1rem)) {
+  font-size: $fs-min * 0.1rem;
+}
+}
+
+// --------------------------------
+// Aspect Ratio Mixin
+// モダンブラウザ向けaspect-ratio対応＋古いブラウザ向けフォールバック
+// Native aspect-ratio handling with fallback for unsupported browsers.
+// --------------------------------
+
+@mixin aspect-ratio($width, $height) {
+  aspect-ratio: math.div($width, $height);
+
+  @supports not (aspect-ratio: math.div($width, $height)) {
+    position: relative;
+    padding-top: math.percentage(math.div($height, $width));
+
+    >* {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

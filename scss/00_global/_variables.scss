@@ -1,0 +1,39 @@
+// --------------------------------
+// Variables
+// 変数定義ファイル
+// --------------------------------
+
+@charset "utf-8";
+
+$mainColor: #ccc;
+
+// --------------------------------
+// Hex to RGB Converter
+// hexカラーコード（#xxxxxx）をRGB形式に変換する関数
+//
+// ▼なぜ必要？ Why needed?
+// 通常の background-color や color では hex→rgba() 直接書けるが、
+// filterやdrop-shadow、CSS変数(var)を使った透過表現など、
+// 「RGB値単体」が欲しい場面では、手動で変換が必要になる。
+//
+// ▼使用例 / Example Usage:
+// 1. drop-shadowフィルタ内で使うとき
+//    filter: drop-shadow(0 2px 4px rgba(#{$mainColorRgb}, 0.3));
+//
+// 2. CSS変数にRGBだけ登録して、透過率だけ後から変えるとき
+//    --main-rgb: #{$mainColorRgb};
+//    background-color: rgba(var(--main-rgb), 0.5);
+//
+// ▼対応できる場面
+// - 高DPI端末で微調整が必要なデザイン
+// - グローバルカラーを管理しつつ、動的な背景透過処理をしたい時
+//
+// --------------------------------
+
+@function hexToRGB($hex) {
+  @return red($hex), green($hex), blue($hex);
+}
+
+// メインカラーをRGB形式で保持
+// Define main color in RGB format for easy reuse
+$mainColorRgb: #{hexToRGB($mainColor)};

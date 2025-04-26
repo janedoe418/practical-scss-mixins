@@ -1,0 +1,187 @@
+@use "sass:math";
+// --------------------------------
+// Extras Mixins
+// 任意で使用できるカスタムmixin集
+//
+// - 主要テンプレートの必須機能ではないが、状況に応じて役立つパターンを収録
+// - モダンブラウザ対応の状況やプロジェクトポリシーに応じて取捨選択してください
+//
+// Collection of optional utility mixins.
+// These are not mandatory core features, but can be useful depending on project needs and browser support.
+// --------------------------------
+
+// --------------------------------
+// SVG Background Mixin with Hover Color Change
+// SVGを背景として表示し、ホバー時に色変更できるmixin
+//
+// - データURIを使用してインラインSVGを背景にセット
+// - カラーコードをエンコードする必要あり
+// - 変換には外部ツールが必要（参考URLが将来無効になる可能性あり）
+// - 必須機能ではなく、Extras扱い
+//
+// Displays an SVG as a background image with color change support on hover.
+// 
+// Note:
+// - Uses inline SVG with data URI
+// - Requires color code URL encoding
+// - External encoding tools may become unavailable in the future
+// - This mixin is categorized as "Extras" (optional usage)
+//
+// Usage Example:
+// @include arrow01(#333, 12, 8);
+// --------------------------------
+
+// --------------------------------
+// URL-Friendly Color Function
+// SVGのデータURI化時に必要な、カラーコードエスケープ用関数
+//
+// - カラーコード（例：#333）をデータURL対応形式（%23333）に変換する
+// - 主に、SVGをbackground-imageとして使用する際に利用
+//
+// Escapes color codes for safe use within SVG data URIs.
+// 
+// Example:
+// Input:  #333
+// Output: %23333
+// 
+// Based on solution from:
+// https://stackoverflow.com/questions/25477819/scss-variable-in-background-image-with-svg-image-data-uri
+// --------------------------------
+@function url-friendly-color($color) {
+    @return "%23"+str-slice("#{$color}", 2, -1);
+}
+
+// --------------------------------
+// SVG Background Mixin with Hover Color Change
+// SVGを背景画像として表示し、ホバー時に色変更できるmixin
+//
+// - データURIでSVGを背景にセット
+// - fillのカラーコードを変数化してカラー変更対応
+// - SVGタグは事前にエンコード済みで用意する必要あり
+// - 変換用ツールが死んだ場合、手動でエンコードする必要あり
+//
+// Displays an SVG as a background image and allows color changes on hover.
+// 
+// Note:
+// - Uses data URI for SVG background
+// - Requires pre-encoded SVG markup with color placeholders
+// - If the external encoding tool becomes unavailable, manual encoding is necessary
+//
+// Example Mixin Usage:
+// @include arrow01(#333, 12, 8);
+// --------------------------------
+
+@mixin arrow01($color: #333, $width: 12, $height: 8) {
+    $color: url-friendly-color($color);
+    width: $width + px;
+    height: $height + px;
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    background: no-repeat center/contain;
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2018%2013.31%22%3E%3Cdefs%3E%3Cstyle%3E.a%7Bfill%3A#{$color}%3B%7D%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cpath%20class%3D%22a%22%20d%3D%22M17.71%2C5.94%2C12.05.28a1%2C1%2C0%2C0%2C0-1.41%2C0%2C1%2C1%2C0%2C0%2C0%2C0%2C1.38l3.95%2C4H1a1%2C1%2C0%2C0%2C0%2C0%2C2H14.59l-3.95%2C4A1%2C1%2C0%2C1%2C0%2C12%2C13l0%2C0%2C5.66-5.66A1%2C1%2C0%2C0%2C0%2C17.71%2C5.94Z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+// --------------------------------
+// Background Image Mixin
+// 背景画像に関する指定をフォールバック任せにできるmixin（大体真ん中に置いてcoverする現場向き）
+// 
+// A background image utility mixin that relies on default fallbacks.
+// Designed for typical use cases: centering and covering the background.
+//
+// 使用例 / Usage:
+// @include background-image('../img/foo.jpg', (
+//   repeat: repeat-x,
+//   position: left top,
+//   size: contain
+// ));
+// --------------------------------
+
+@mixin background-image($image-path, $options: ()) {
+    $repeat: if(map-has-key($options, repeat), map-get($options, repeat), no-repeat);
+    $position: if(map-has-key($options, position), map-get($options, position), center);
+    $size: if(map-has-key($options, size), map-get($options, size), cover);
+    background: url($image-path) $repeat $position / $size;
+}
+
+// --------------------------------
+// Custom Scrollbar Mixin
+// スクロールバーをカスタマイズするmixin
+//
+// - Safari（2025年現在）は非対応なので、基本的にはブラウザのネイティブ挙動を推奨
+// - 任意で色やサイズを指定可能。未指定の場合はデフォルト色（白と灰色）を使用
+//
+// Customizes the appearance of scrollbars.
+//
+// Note:
+// Safari does not currently support scrollbar styling (as of 2025).
+// It is generally recommended to rely on native browser behavior.
+// Optional parameters are available for size and color customization.
+//
+// Parameters:
+// @param {Number} $size - Scrollbar size (default: 10)
+// @param {Color} $foreground-color - Thumb color (default: #ccc)
+// @param {Color} $background-color - Track color (default: #fff)
+// --------------------------------
+
+@mixin scrollbar($size: 10, $foreground-color: #ccc, $background-color: #fff) {
+    &::-webkit-scrollbar {
+        width: $size + px;
+        height: $size + px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: $background-color;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: $foreground-color;
+    }
+
+    scrollbar-color: $foreground-color $background-color;
+}
+
+// --------------------------------
+// Triangle Mixin
+// CSSだけで三角形を描画するmixin
+//
+// - top / bottom / left / right の4方向に対応
+// - 単位(px)は自動付与
+// - 通常のCSS実装と同じく、borderを利用して描画
+//
+// Draws a simple CSS triangle pointing in a specified direction.
+//
+// - Supports directions: top, bottom, left, right
+// - Automatically appends px units
+// - Uses standard CSS border-based technique
+//
+// Example Usage:
+// @include triangle(top, #ccc, 8, 10);
+// --------------------------------
+@mixin triangle($direction, $color, $height, $width) {
+    content: '';
+    display: inline-block;
+    height: 0;
+    width: 0;
+    border-style: solid;
+
+    @if($direction =='top') {
+        border-color: transparent transparent $color transparent;
+        border-width: 0 math.div($width, 2) + px $height + px math.div($width, 2) + px;
+    }
+
+    @if ($direction =='bottom') {
+        border-color: $color transparent transparent transparent;
+        border-width: $height + px math.div($width, 2) + px 0 math.div($width, 2) + px;
+    }
+
+    @if ($direction =='right') {
+        border-color: transparent transparent transparent $color;
+        border-width: math.div($height, 2) + px 0 math.div($height, 2) + px $width + px;
+    }
+
+    @if ($direction =='left') {
+        border-color: transparent $color transparent transparent;
+        border-width: math.div($height, 2) + px $width + px math.div($height, 2) + px 0;
+    }
+}

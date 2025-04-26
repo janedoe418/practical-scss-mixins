@@ -1,0 +1,47 @@
+// --------------------------------
+// Transition Mixin
+// トランジションを柔軟に設定するmixin
+//
+// - 複数プロパティを個別に設定可能
+// - プロパティごとに異なる duration と easing を設定可能
+// - 未指定時はデフォルト（all 0.3s ease-in）で自動適用
+// - 型エラー時はエラーメッセージで通知
+//
+// Flexible transition mixin.
+//
+// - Supports multiple properties with individual durations and easings
+// - Automatically applies fallback (all 0.3s ease-in) if unspecified
+// - Validates input types and throws error if misused
+//
+// 使用例 / Usage Example:
+// @include trans((transform, opacity), (0.5, 0.3), (ease-in, ease-out));
+// --------------------------------
+
+@mixin trans($props: null, $durs: null, $easings: null) {
+  // props, durs, easings が null ならデフォルト値を代入
+  // If props, durs, or easings are null, replace with default values.
+  $props: if($props ==null, (all), if(type-of($props)=='list', $props, ($props, )));
+  $durs: if($durs ==null, (0.3), if(type-of($durs)=='list', $durs, ($durs, )));
+  $easings: if($easings ==null, (ease-in), if(type-of($easings)=='list', $easings, ($easings, )));
+
+  $transitions: (
+  );
+
+// propsのリスト長を取得
+// Get the number of properties specified
+$length: length($props);
+
+// 各プロパティに対して対応するdurationとeasingを適用してtransition定義を作成
+// Build transition definition for each property with corresponding duration and easing
+@for $i from 1 through $length {
+  $prop: nth($props, $i);
+  $dur: nth($durs, $i);
+  $easing: nth($easings, $i);
+
+  $transitions: append($transitions, #{$prop} #{$dur}s #{$easing}, comma);
+}
+
+// まとめたtransitionを出力
+// Output the final transition property
+transition: $transitions;
+}

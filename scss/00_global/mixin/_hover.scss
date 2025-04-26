@@ -1,0 +1,19 @@
+// --------------------------------
+// Hover Mixin for Touch Support
+// - Applies hover only on non-touch devices.
+// - Allows hover styles in mobile-first workflows.
+// --------------------------------
+//
+// --------------------------------
+// ホバーミックスイン（タッチ端末サポート）
+// - タッチデバイスでは hover を無効化
+// - モバイルファーストでも hover を使いたい場合に有効
+// --------------------------------
+
+@mixin hover {
+  @media not all and (pointer: coarse) {
+    &:hover {
+      @content;
+    }
+  }
+}

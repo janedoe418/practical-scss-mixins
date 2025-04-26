@@ -1,0 +1,115 @@
+// --------------------------------
+// Media Query Mixins
+// メディアクエリ用ミックスイン集
+//
+// なぜ0.02pxを引くのか？
+// 現在、ブラウザは範囲ベースのメディアクエリ（range context queries）を正式にはサポートしていないため、
+// min- と max- 接頭辞を併用する場合、隙間が発生する可能性があります。
+// これを防ぐため、max-widthでは0.02pxを引いて境界を正確に保っています。
+// （特に高DPIデバイス環境では、ビューポート幅に小数点が発生するため有効です）
+//
+// Why subtract 0.02px?
+// Most browsers do not fully support range context media queries yet.
+// When using both min- and max- prefixes, small gaps can occur.
+// To prevent this, we subtract 0.02px from max-width for accurate breakpoints.
+// (Especially effective on high-DPI devices with fractional viewport widths.)
+//
+// Reference:
+// https://getbootstrap.jp/docs/5.3/layout/breakpoints/
+//
+// --------------------------------
+
+// ブレイクポイントマップ
+// Breakpoints Map
+$breakpoints: (
+  se: 320px,
+  sp-small: 375px,
+  sp-large: 480px,
+  sp: 768px,
+  tb: 1024px,
+  pc: 1280px,
+  pc-large: 1400px,
+  mac: 1921px
+);
+
+// --------------------------------
+// Basic Media Query Mixin
+// シンプルなmin or max指定用ミックスイン
+//
+// Parameters:
+// @param {String} $point - ブレイクポイント名（例: 'sp', 'pc'など） / Breakpoint key (e.g., 'sp', 'pc')
+// @param {String} $type - 'min' または 'max'（デフォルトは'min'）/ 'min' or 'max' (default: 'min')
+//
+// Usage:
+// @include mq('pc') { ... } // → min-width指定
+// @include mq('sp', 'max') { ... } // → max-width指定
+// --------------------------------
+@mixin mq($point, $type: min) {
+  $value: map-get($breakpoints, $point);
+
+  @if $value {
+    @if $type ==min {
+      @media (min-width: $value) {
+        @content;
+      }
+    }
+
+    @else if $type ==max {
+      @media (max-width: $value - 0.02px) {
+        @content;
+      }
+    }
+
+    @else {
+      @warn "指定されたtype（#{$type}）が不正です。min か max を指定してください。 / Invalid type '#{$type}'. Use 'min' or 'max'.";
+    }
+  }
+
+  @else {
+    @warn "指定されたブレイクポイント（#{$point}）は定義されていません。 / Breakpoint '#{$point}' is not defined.";
+  }
+}
+
+// --------------------------------
+// Advanced Range + Orientation Mixin
+// min, max, orientationを全て指定して複雑な条件を作る用
+//
+// Parameters:
+// @param {String|Number} $min - min-width指定（キー or 数値）/ min-width (key or px value)
+// @param {String|Number} $max - max-width指定（キー or 数値）/ max-width (key or px value)
+// @param {String} $orientation - 'portrait' または 'landscape' / 'portrait' or 'landscape'
+//
+// Usage:
+// @include mqx('tb', 'pc', landscape) { ... }
+// → タブレット以上PC未満、かつ横向きの時
+// --------------------------------
+@mixin mqx($min, $max, $orientation) {
+
+  // ブレイクポイント取得
+  // Resolve breakpoint keys to px values
+  @if type-of($min)=='string' {
+    $min: map-get($breakpoints, $min);
+  }
+
+  @if type-of($max)=='string' {
+    $max: map-get($breakpoints, $max);
+  }
+
+  // 必須チェック
+  // Validation: All parameters must be provided
+  @if $min ==null or $max ==null or $orientation ==null {
+    @error "mqx() mixin: $min, $max, $orientation はすべて必須です。 / All of $min, $max, and $orientation must be specified.";
+  }
+
+  // orientationチェック
+  // Validate orientation keyword
+  @if $orientation !=portrait and $orientation !=landscape {
+    @error "mqx() mixin: orientationには 'portrait' または 'landscape' を指定してください。 / Orientation must be 'portrait' or 'landscape'.";
+  }
+
+  // メディアクエリを出力
+  // Output the media query
+  @media (min-width: #{$min}) and (max-width: #{$max - 0.02px}) and (orientation: #{$orientation}) {
+    @content;
+  }
+}
