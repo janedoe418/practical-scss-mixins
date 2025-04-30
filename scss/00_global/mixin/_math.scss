@@ -116,6 +116,40 @@ $artboard-pc: 1920;
 }
 
 // --------------------------------
+// Clamp Size Mixin
+// 2つのビューポート幅の間でサイズがスムーズに変化するclamp()式を生成するmixin
+// 指定した最小幅から最大幅の間で、要素サイズを滑らかにスケーリング
+//
+// A mixin that outputs a clamp() expression where size scales fluidly
+// between two viewport widths.
+//
+// 使用方法：
+// @include clamp-size(property名, 最小サイズ, 最小幅, 最大サイズ, 最大幅);
+//
+// Example usage:
+// @include clamp-size(bottom, 200, 1400, 270, 1920);
+// → bottom: clamp(200px, calc(200px + (270 - 200) * ((100vw - 1400px) / (1920 - 1400))), 270px);
+//
+// ユースケース：デザインがPC基準で作られており、特定範囲でだけスムーズに変化させたい時など
+// Use case: when working with desktop-first designs that require smooth scaling within a defined range.
+//
+// [Note]
+// - 単位は自動でpxとして扱われるため、数値のみでOK
+// - All values are treated as px units. Pass raw numbers only.
+// --------------------------------
+@mixin clamp-size($property, $min-size, $min-width, $max-size, $max-width) {
+  #{$property}: clamp(#{$min-size}px,
+    calc(#{$min-size}px + (#{$max-size} - #{$min-size}) * ((100vw - #{$min-width}px) / (#{$max-width} - #{$min-width}))),
+    #{$max-size}px);
+}
+
+@mixin clamp-size($property, $min-size, $min-width, $max-size, $max-width) {
+  #{$property}: clamp(#{$min-size}px,
+    calc(#{$min-size}px + (#{$max-size} - #{$min-size}) * ((100vw - #{$min-width}px) / (#{$max-width} - #{$min-width}))),
+    #{$max-size}px);
+}
+
+// --------------------------------
 // Aspect Ratio Mixin
 // モダンブラウザ向けaspect-ratio対応＋古いブラウザ向けフォールバック
 // Native aspect-ratio handling with fallback for unsupported browsers.
